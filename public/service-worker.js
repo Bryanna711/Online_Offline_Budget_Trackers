@@ -22,21 +22,21 @@ self.addEventListener("install", function (event) {
     self.skipWaiting();
 });
 
-self.addEventListener("activate", function (event) {
-    event.waitUntil(
-        caches.keys().then(keyList => {
-            return Promise.all(
-                keyList.map(key => {
-                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-                        console.log("Removed old cache", key);
-                        return caches.delete(key);
-                    }
-                })
-            );
-        })
-    );
-    self.clients.claim();
-});
+// self.addEventListener("activate", function (event) {
+//     event.waitUntil(
+//         caches.keys().then(keyList => {
+//             return Promise.all(
+//                 keyList.map(key => {
+//                     if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+//                         console.log("Removed old cache", key);
+//                         return caches.delete(key);
+//                     }
+//                 })
+//             );
+//         })
+//     );
+//     self.clients.claim();
+// });
 
 self.addEventListener("fetch", function (event) {
     if (event.request.url.includes("/api/")) {
@@ -61,7 +61,7 @@ self.addEventListener("fetch", function (event) {
             return caches.match(event.request).then(function (response) {
                 if (response) {
                     return response;
-                } else if (event.request.headers.get("accept").includes("text/html")) {
+                } else if (event.request.headers.get("accept").includes("text/plain")) {
                     return caches.match("/");
                 }
             });

@@ -23,12 +23,12 @@ request.onsuccess = ({ target }) => {
     }
 };
 
-request.onerror = ({ event }) => {
+request.onerror = (event) => {
     console.log(`error : ${event.target.errorCode}`)
 };
 
 const checkDatabase = () => {
-    let transaction = db.transaction(["budgetStore"], "readwrite");
+    const transaction = db.transaction(["budgetStore"], "readwrite");
 
     const store = transaction.objectStore("budgetStore");
 
@@ -44,11 +44,12 @@ const checkDatabase = () => {
                     'Content-Type': 'application/json',
                 },
             })
-                .then((response) => response.json())
+                .then((response) => {
+                    return response.json();
+                })
                 .then((res) => {
                     if (res.length !== 0) {
                         const transaction = db.transaction(["budgetStore"], "readwrite");
-
                         const store = transaction.objectStore("budgetStore");
                         store.clear();
                         console.log("Cleared Store");
@@ -56,9 +57,9 @@ const checkDatabase = () => {
                 });
         }
     };
-}
+};
+
 const saveRecord = (record) => {
-    console.log("Saving Record");
     const transaction = db.transaction(["budgetStore"], "readwrite");
     const store = transaction.objectStore("budgetStore");
     store.add(record);
