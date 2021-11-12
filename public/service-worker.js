@@ -22,24 +22,24 @@ self.addEventListener("install", function (event) {
     self.skipWaiting();
 });
 
-self.addEventListener("activate", function (event) {
-    event.waitUntil(
-        caches.keys().then(keyList => {
-            return Promise.all(
-                keyList.map(key => {
-                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-                        console.log("Removed old cache", key);
-                        return caches.delete(key);
-                    }
-                })
-            );
-        })
-    );
-    self.clients.claim();
-});
+// self.addEventListener("activate", function (event) {
+//     event.waitUntil(
+//         caches.keys().then(keyList => {
+//             return Promise.all(
+//                 keyList.map(key => {
+//                     if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+//                         console.log("Removed old cache", key);
+//                         return caches.delete(key);
+//                     }
+//                 })
+//             );
+//         })
+//     );
+//     self.clients.claim();
+// });
 
 self.addEventListener("fetch", function (event) {
-    if (event.request.url.includes("/api")) {
+    if (event.request.url.includes("/api/")) {
         event.respondWith(
             caches.open(DATA_CACHE_NAME).then(cache => {
                 return fetch(event.request)
@@ -56,9 +56,9 @@ self.addEventListener("fetch", function (event) {
         );
         return;
     }
-    evt.respondWith(
-        caches.match(evt.request).then(function (response) {
-            return response || fetch(evt.request);
+    event.respondWith(
+        caches.match(event.request).then(function (response) {
+            return response || fetch(event.request);
         })
     );
 });
