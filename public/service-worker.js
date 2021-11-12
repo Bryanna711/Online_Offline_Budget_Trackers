@@ -22,49 +22,49 @@ self.addEventListener("install", function (event) {
     self.skipWaiting();
 });
 
-// self.addEventListener("activate", function (event) {
-//     event.waitUntil(
-//         caches.keys().then(keyList => {
-//             return Promise.all(
-//                 keyList.map(key => {
-//                     if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-//                         console.log("Removed old cache", key);
-//                         return caches.delete(key);
-//                     }
-//                 })
-//             );
+// self.addEventListener("fetch", function (event) {
+//     if (event.request.url.includes("/api/")) {
+//         event.respondWith(
+//             caches.open(DATA_CACHE_NAME).then(cache => {
+//                 return fetch(event.request)
+//                     .then(response => {
+//                         if (response.status === 200) {
+//                             cache.put(event.request.url, response.clone());
+//                         }
+//                         return response;
+//                     })
+//                     .catch(err => {
+//                         return cache.match(event.request);
+//                     });
+//             }).catch(err => console.log(err))
+//         );
+//         return;
+//     }
+//     event.respondWith(
+//         fetch(event.request).catch(function () {
+//             return caches.match(event.request).then(function (response) {
+//                 if (response) {
+//                     return response;
+//                 } else if (event.request.headers.get("accept").includes("text/plain")) {
+//                     return caches.match("/");
+//                 }
+//             });
 //         })
 //     );
-//     self.clients.claim();
 // });
 
-self.addEventListener("fetch", function (event) {
-    if (event.request.url.includes("/api/")) {
+self.addEventListener("fetch", event => {
+    if (event.request.url.includes("/api")) {
         event.respondWith(
-            caches.open(DATA_CACHE_NAME).then(cache => {
-                return fetch(event.request)
-                    .then(response => {
-                        if (response.status === 200) {
-                            cache.put(event.request.url, response.clone());
-                        }
-                        return response;
-                    })
-                    .catch(err => {
-                        return cache.match(event.request);
-                    });
-            }).catch(err => console.log(err))
+            fetch(event.request).catch(err =>
+                self.cache.open(DATA_CACHE_NAME).then(cache => cache.match("/"))
+            )
         );
-        return;
+    } else {
+        event.respondWith(
+            fetch(event.request).catch(err =>
+                caches.match(event.request).then(response => response)
+            )
+        );
     }
-    event.respondWith(
-        fetch(event.request).catch(function () {
-            return caches.match(event.request).then(function (response) {
-                if (response) {
-                    return response;
-                } else if (event.request.headers.get("accept").includes("text/plain")) {
-                    return caches.match("/");
-                }
-            });
-        })
-    );
 });
