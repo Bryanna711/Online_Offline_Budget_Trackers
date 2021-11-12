@@ -9,8 +9,8 @@ const FILES_TO_CACHE = [
     "https://cdn.jsdelivr.net/npm/chart.js@2.8.0"
 ];
 
-const CACHE_NAME = "static-cache";
-const DATA_CACHE_NAME = "data-cache";
+const CACHE_NAME = "static-cache-v1";
+const DATA_CACHE_NAME = "data-cache-v1";
 
 self.addEventListener("install", function (event) {
     event.waitUntil(
@@ -22,21 +22,21 @@ self.addEventListener("install", function (event) {
     self.skipWaiting();
 });
 
-// self.addEventListener("activate", function (event) {
-//     event.waitUntil(
-//         caches.keys().then(keyList => {
-//             return Promise.all(
-//                 keyList.map(key => {
-//                     if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-//                         console.log("Removed old cache", key);
-//                         return caches.delete(key);
-//                     }
-//                 })
-//             );
-//         })
-//     );
-//     self.clients.claim();
-// });
+self.addEventListener("activate", function (event) {
+    event.waitUntil(
+        caches.keys().then(keyList => {
+            return Promise.all(
+                keyList.map(key => {
+                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+                        console.log("Removed old cache", key);
+                        return caches.delete(key);
+                    }
+                })
+            );
+        })
+    );
+    self.clients.claim();
+});
 
 self.addEventListener("fetch", function (event) {
     if (event.request.url.includes("/api/")) {
@@ -57,8 +57,14 @@ self.addEventListener("fetch", function (event) {
         return;
     }
     event.respondWith(
-        caches.match(event.request).then(function (response) {
-            return response || fetch(event.request);
+        fetch(event.request).catch(function () {
+            return caches.match(event.request).then(function (response) {
+                if (response) {
+                    return response;
+                } else if (event.request.headers.get("accept").includes("text/html")) {
+                    return caches.match("/");
+                }
+            });
         })
     );
 });

@@ -1,13 +1,29 @@
+const indexedDB =
+    window.indexedDB ||
+    window.mozIndexedDB ||
+    window.webkitIndexedDB ||
+    window.msIndexedDB ||
+    window.shimIndexedDB;
+
 let db;
 
 const request = indexedDB.open("budgetDB", 1);
 
-request.onupgradeneeded = (event) => {
-    db = event.target.result;
-    db.createObjectStore("budgetStore", { autoIncrement: true })
+request.onupgradeneeded = ({ target }) => {
+    db = target.result;
+    db.createObjectStore("budgetStore", { autoIncrement: true });
+};
+request.onsuccess = ({ target }) => {
+    console.log("Successful");
+    db = target.result;
+
+    if (navigator.onLine) {
+        console.log("Backend is Online");
+        checkDatabase();
+    }
 };
 
-request.onerror = (event) => {
+request.onerror = ({ event }) => {
     console.log(`error : ${event.target.errorCode}`)
 };
 
@@ -31,27 +47,17 @@ const checkDatabase = () => {
                 .then((response) => response.json())
                 .then((res) => {
                     if (res.length !== 0) {
-                        transaction = db.transaction([""], "readwrite");
+                        const transaction = db.transaction(["budgetStore"], "readwrite");
 
-                        const currentStore = transaction.objectStore("");
-                        currentStore.clear();
+                        const store = transaction.objectStore("budgetStore");
+                        store.clear();
                         console.log("Cleared Store");
                     }
                 });
         }
     };
 }
-request.onsuccess = (event) => {
-    console.log("Successful");
-    db = event.target.result;
-
-    if (navigator.onLine) {
-        console.log("Backend is Online");
-        checkDatabase();
-    }
-};
-
-const saveRec = (record) => {
+const saveRecord = (record) => {
     console.log("Saving Record");
     const transaction = db.transaction(["budgetStore"], "readwrite");
     const store = transaction.objectStore("budgetStore");
